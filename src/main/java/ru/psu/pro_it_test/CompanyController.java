@@ -1,10 +1,7 @@
 package ru.psu.pro_it_test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,12 +16,14 @@ public class CompanyController {
     }
 
     @GetMapping("list")
-    public List<Company> getAll(@RequestParam(required = false) String name,
+    public List<Company> getAll(@RequestParam(defaultValue = "0") Integer offset,
+                                @RequestParam(defaultValue = "20") Integer pageSize,
+                                @RequestParam(required = false) String name,
                                 @RequestParam(defaultValue = "true") boolean startsWith) {
-        if (name == null)
-            return repository.findAll();
-        else
-            return repository.findAllByName(name, startsWith);
+
+        Pageable request = new Pageable(offset, pageSize);
+
+        return name == null ? repository.findAll(request) : repository.findByName(name, startsWith, request);
     }
 
 }

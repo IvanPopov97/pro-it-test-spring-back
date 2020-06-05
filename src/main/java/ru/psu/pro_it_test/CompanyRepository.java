@@ -18,21 +18,69 @@ public class CompanyRepository {
 
     private final DSLContext dsl;
 
+    private final AggregateFunction<Integer> employeeCount = DSL.count(EMPLOYEE.ID);
+    private final ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
+
     @Autowired
     public CompanyRepository(DSLContext dsl) {
         this.dsl = dsl;
     }
 
-    public List<Company> findAll() {
-        return findAllByName("", true);
+    private SelectJoinStep<?> selectAndJoin() {
+        return dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, employeeCount)
+                .from(COMPANY)
+                .leftJoin(HEAD)
+                .on(HEAD.ID.eq(COMPANY.HEAD_COMPANY_ID))
+                .leftJoin(EMPLOYEE)
+                .on(EMPLOYEE.COMPANY_ID.eq(COMPANY.ID));
     }
 
-    private String getRegex(String name, boolean startsWith) {
+    private SelectHavingStep<?> selectJoinAndGroup() {
+        return selectAndJoin().groupBy(COMPANY.ID, HEAD.ID);
+    }
+
+    private SelectHavingStep<?> selectJoinFilterAndGroup(Condition filter) {
+        return selectAndJoin().where(filter).groupBy(COMPANY.ID, HEAD.ID);
+    }
+
+    private Result<?> extractForPage (SelectHavingStep<?> prevStep, Pageable pageRequest) {
+        return prevStep
+                .limit(pageRequest.getPageSize())
+                .offset(pageRequest.getOffset())
+                .fetch();
+    }
+
+    private List<Company> mapToCompany(Result<?> result) {
+        return result.map(record -> new Company(
+                COMPANY.ID.get(record),
+                COMPANY.NAME.get(record),
+                HEAD.ID.get(record),
+                HEAD.NAME.get(record),
+                employeeCount.get(record)
+        ));
+    }
+
+    private String getRegexp(String name, boolean startsWith) {
         return startsWith ? name + "%" : name;
     }
 
     private Condition getFilter(String name, boolean startsWith) {
-        return COMPANY.NAME.likeIgnoreCase(getRegex(name, startsWith));
+        return COMPANY.NAME.likeIgnoreCase(getRegexp(name, startsWith));
+    }
+
+    public List<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
+
+        Condition filter = getFilter(name, startsWith);
+
+        return mapToCompany(
+                extractForPage(selectJoinFilterAndGroup(filter), pageRequest)
+        );
+    }
+
+    public List<Company> findAll(Pageable pageRequest) {
+        return mapToCompany(
+                extractForPage(selectJoinAndGroup(), pageRequest)
+        );
     }
 
     public int findCount(String name, boolean startsWith) {
@@ -40,34 +88,5 @@ public class CompanyRepository {
         return name.equals("") ?
                 afterSelect.fetchOne(0, int.class) :
                 afterSelect.where(getFilter(name, startsWith)).fetchOne(0, int.class);
-    }
-
-    public List<Company> findAllByName(String name, boolean startsWith) {
-        AggregateFunction<Integer> count = DSL.count(EMPLOYEE.ID);
-        ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
-
-        SelectJoinStep<?> afterJoin = dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, count)
-                .from(COMPANY)
-                .leftJoin(HEAD)
-                .on(HEAD.ID.eq(COMPANY.HEAD_COMPANY_ID))
-                .leftJoin(EMPLOYEE)
-                .on(EMPLOYEE.COMPANY_ID.eq(COMPANY.ID));
-
-        SelectConnectByStep<?> afterWhere = name.equals("") ?
-                afterJoin :
-                afterJoin.where(getFilter(name, startsWith));
-
-        System.out.println(afterWhere.getSQL());
-
-        return afterWhere
-                .groupBy(COMPANY.ID, HEAD.ID)
-                .fetch()
-                .map(record -> new Company(
-                        COMPANY.ID.get(record),
-                        COMPANY.NAME.get(record),
-                        HEAD.ID.get(record),
-                        HEAD.NAME.get(record),
-                        count.get(record)
-                ));
     }
 }
