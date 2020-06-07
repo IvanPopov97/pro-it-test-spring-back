@@ -3,6 +3,8 @@ package ru.psu.pro_it_test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController @RequestMapping("company")
 public class CompanyController {
 
@@ -14,7 +16,7 @@ public class CompanyController {
     }
 
     @GetMapping("list")
-    public Page<Company> getAll(@RequestParam(defaultValue = "0") Long offset,
+    public Page<Company> getList(@RequestParam(defaultValue = "0") Long offset,
                                 @RequestParam(defaultValue = "20") int pageSize,
                                 @RequestParam(required = false) String name,
                                 @RequestParam(defaultValue = "true") boolean startsWith) {
@@ -22,6 +24,11 @@ public class CompanyController {
         Pageable request = new Pageable(offset, pageSize);
 
         return name == null ? repository.findAll(request) : repository.findByName(name, startsWith, request);
+    }
+
+    @GetMapping("tree")
+    public List<Company> getTreePart(@RequestParam(required = false) Long parentId) {
+        return parentId == null ? repository.findParents() : repository.findDaughters(parentId);
     }
 
     @GetMapping("count")

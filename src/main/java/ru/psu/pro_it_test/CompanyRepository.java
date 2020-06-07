@@ -26,6 +26,15 @@ public class CompanyRepository {
         this.dsl = dsl;
     }
 
+    private SelectJoinStep<?> select() {
+        return dsl.select(COMPANY.ID, COMPANY.NAME)
+                .from(COMPANY);
+    }
+
+    private SelectConditionStep<?> selectAndFilter(Condition filter) {
+        return select().where(filter);
+    }
+
     private SelectJoinStep<?> selectAndJoin() {
         return dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, employeeCount)
                 .from(COMPANY)
@@ -71,6 +80,7 @@ public class CompanyRepository {
                 .fetch();
     }
 
+    // TODO: вынести это в класс CompanyMapper
     private List<Company> mapToCompany(Result<?> result) {
         return result.map(record -> new Company(
                 COMPANY.ID.get(record),
@@ -86,16 +96,20 @@ public class CompanyRepository {
     }
 
 
-    private Condition getFilter(String name, boolean startsWith) {
+    private Condition getFilterByName(String name, boolean startsWith) {
         return COMPANY.NAME.likeIgnoreCase(getRegexp(name, startsWith));
     }
 
     public Page<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
 
-        Condition filter = getFilter(name, startsWith);
+        Condition filter = getFilterByName(name, startsWith);
 
         return getPage(selectJoinFilterAndGroup(filter), pageRequest);
     }
+
+//    public List<Company> findAll() {
+//        return mapToCompany(select().fetch());
+//    }
 
     public Page<Company> findAll(Pageable pageRequest) {
         return getPage(selectJoinAndGroup(), pageRequest);
@@ -111,7 +125,17 @@ public class CompanyRepository {
 
     public long findCount(String name, boolean startsWith) {
         return selectCount()
-                .where(getFilter(name, startsWith))
+                .where(getFilterByName(name, startsWith))
                 .fetchOne(0, long.class);
+    }
+
+    public List<Company> findDaughters(Long parentId) {
+        Condition filter = COMPANY.HEAD_COMPANY_ID.eq(parentId);
+        return selectAndFilter(filter).fetchInto(Company.class);
+    }
+
+    public List<Company> findParents() {
+        Condition filter = COMPANY.HEAD_COMPANY_ID.isNull();
+        return selectAndFilter(filter).fetchInto(Company.class);
     }
 }
