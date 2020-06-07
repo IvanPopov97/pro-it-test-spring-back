@@ -43,10 +43,31 @@ public class CompanyRepository {
         return selectAndJoin().where(filter).groupBy(COMPANY.ID, HEAD.ID);
     }
 
-    private Result<?> extractForPage (SelectHavingStep<?> prevStep, Pageable pageRequest) {
+    private Page<Company> getPage (SelectLimitStep<?> prevStep, Pageable request) {
+        Result<?> result = extractForPage(
+                prevStep,
+                request.getOffset(),
+                request.getPageSize() + 1 // запрашиваем на 1 больше, чтобы убедиться, что это not last page
+        );
+
+        boolean isFirst = request.getOffset() == 0;
+        boolean isNotLast = result.size() > request.getPageSize();
+
+        if (isNotLast)
+            result.remove(result.size() - 1);
+
+        return new Page<>(
+                mapToCompany(result),
+                isFirst,
+                !isNotLast,
+                result.isEmpty()
+        );
+    }
+
+    private Result<?> extractForPage (SelectLimitStep<?> prevStep, long skip, int pageSize) {
         return prevStep
-                .limit(pageRequest.getPageSize())
-                .offset(pageRequest.getOffset())
+                .limit(pageSize)
+                .offset(skip)
                 .fetch();
     }
 
@@ -64,29 +85,33 @@ public class CompanyRepository {
         return startsWith ? name + "%" : name;
     }
 
+
     private Condition getFilter(String name, boolean startsWith) {
         return COMPANY.NAME.likeIgnoreCase(getRegexp(name, startsWith));
     }
 
-    public List<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
+    public Page<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
 
         Condition filter = getFilter(name, startsWith);
 
-        return mapToCompany(
-                extractForPage(selectJoinFilterAndGroup(filter), pageRequest)
-        );
+        return getPage(selectJoinFilterAndGroup(filter), pageRequest);
     }
 
-    public List<Company> findAll(Pageable pageRequest) {
-        return mapToCompany(
-                extractForPage(selectJoinAndGroup(), pageRequest)
-        );
+    public Page<Company> findAll(Pageable pageRequest) {
+        return getPage(selectJoinAndGroup(), pageRequest);
     }
 
-    public int findCount(String name, boolean startsWith) {
-        SelectJoinStep<?> afterSelect = dsl.selectCount().from(COMPANY);
-        return name.equals("") ?
-                afterSelect.fetchOne(0, int.class) :
-                afterSelect.where(getFilter(name, startsWith)).fetchOne(0, int.class);
+    private SelectJoinStep<?> selectCount() {
+        return dsl.selectCount().from(COMPANY);
+    }
+
+    public long findCount() {
+        return selectCount().fetchOne(0, long.class);
+    }
+
+    public long findCount(String name, boolean startsWith) {
+        return selectCount()
+                .where(getFilter(name, startsWith))
+                .fetchOne(0, long.class);
     }
 }
