@@ -5,7 +5,6 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
-//@NoArgsConstructor
 public class Company {
     @NonNull
     private long id;
@@ -13,6 +12,7 @@ public class Company {
     private String name;
     private Company headCompany;
     private long employeeCount;
+    private boolean hasChild;
 
     public Company (long id,
                     String name,
@@ -23,5 +23,13 @@ public class Company {
         this.name = name;
         this.headCompany = headCompanyId == null ? null : new Company(headCompanyId, headCompanyName);
         this.employeeCount = employeeCount;
+    }
+
+    public Company (long id,
+                    String name,
+                    boolean isHeadCompany) {
+        this.id = id;
+        this.name = name;
+        this.hasChild = isHeadCompany;
     }
 }

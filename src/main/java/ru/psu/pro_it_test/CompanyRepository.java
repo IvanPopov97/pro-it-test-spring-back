@@ -17,7 +17,15 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     private final DSLContext dsl;
 
-    private final AggregateFunction<Integer> employeeCount = DSL.count(EMPLOYEE.ID);
+    private final AggregateFunction<Integer> EMPLOYEE_COUNT = DSL.count(EMPLOYEE.ID);
+    private final Field<Boolean> HAS_CHILD = DSL.field(
+            COMPANY.ID.eq(
+                    DSL.any(
+                            DSL.select(COMPANY.HEAD_COMPANY_ID).from(COMPANY)
+                    )
+            )
+    );
+
     private final ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
 
     @Autowired
@@ -26,8 +34,10 @@ public class CompanyRepository extends JooqRepository<Company> {
     }
 
     protected SelectJoinStep<?> select() {
-        return dsl.select(COMPANY.ID, COMPANY.NAME)
+        SelectJoinStep<?> select = dsl.select(COMPANY.ID, COMPANY.NAME, HAS_CHILD)
                 .from(COMPANY);
+        System.out.println(select.getSQL());
+        return select;
     }
 
     protected SelectJoinStep<?> selectCount() {
@@ -35,7 +45,7 @@ public class CompanyRepository extends JooqRepository<Company> {
     }
 
     protected SelectJoinStep<?> selectAndJoin() {
-        return dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, employeeCount)
+        return dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, EMPLOYEE_COUNT)
                 .from(COMPANY)
                 .leftJoin(HEAD)
                 .on(HEAD.ID.eq(COMPANY.HEAD_COMPANY_ID))
@@ -50,7 +60,7 @@ public class CompanyRepository extends JooqRepository<Company> {
                 COMPANY.NAME.get(record),
                 HEAD.ID.get(record),
                 HEAD.NAME.get(record),
-                employeeCount.get(record)
+                EMPLOYEE_COUNT.get(record)
         ));
     }
 

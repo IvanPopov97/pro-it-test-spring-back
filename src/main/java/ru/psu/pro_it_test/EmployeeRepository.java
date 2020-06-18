@@ -1,6 +1,7 @@
 package ru.psu.pro_it_test;
 
 import org.jooq.*;
+import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,13 @@ public class EmployeeRepository extends JooqRepository<Employee> {
     private final DSLContext dsl;
 
     private final ru.psu.pro_it_test.tables.Employee BOSS = EMPLOYEE.as("boss");
+    private final Field<Boolean> HAS_CHILD = DSL.field(
+            EMPLOYEE.ID.eq(
+                    DSL.any(
+                            DSL.select(EMPLOYEE.BOSS_ID).from(EMPLOYEE)
+                    )
+            )
+    );
 
     @Autowired
     public EmployeeRepository(DSLContext dsl) {
@@ -24,7 +32,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
     }
 
     protected SelectJoinStep<?> select() {
-        return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME)
+        return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME, HAS_CHILD)
                 .from(EMPLOYEE);
     }
 

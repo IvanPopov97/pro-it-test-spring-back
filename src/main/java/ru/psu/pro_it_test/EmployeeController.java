@@ -34,6 +34,7 @@ public class EmployeeController {
     @GetMapping("count")
     public long getCount(@RequestParam(required = false) String name,
                         @RequestParam(defaultValue = "true") boolean startsWith) {
+        //Company company = new Company(1, "F", false);
         return name == null ? repository.findCount() : repository.findCount(name, startsWith);
     }
 }

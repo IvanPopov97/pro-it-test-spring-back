@@ -14,6 +14,7 @@ public class Employee {
     @NonNull
     private String name;
     private Company company;
+    private boolean hasChild;
     private Employee boss;
 
     public Employee (Long id,
@@ -26,5 +27,13 @@ public class Employee {
         this.name = name;
         this.company = companyId == null ? null : new Company(companyId, companyName);
         this.boss = bossId == null ? null : new Employee(bossId, bossName);
+    }
+
+    public Employee (long id,
+                    String name,
+                    boolean isBoss) {
+        this.id = id;
+        this.name = name;
+        this.hasChild = isBoss;
     }
 }
