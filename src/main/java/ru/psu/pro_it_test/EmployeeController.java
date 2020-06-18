@@ -5,18 +5,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController @RequestMapping("company") @CrossOrigin(origins = "http://localhost:3000")
-public class CompanyController {
+@RestController @RequestMapping("employee") @CrossOrigin(origins = "http://localhost:3000")
+public class EmployeeController {
 
-    private final CompanyRepository repository;
+    private final EmployeeRepository repository;
 
     @Autowired
-    public CompanyController(CompanyRepository service) {
+    public EmployeeController(EmployeeRepository service) {
         this.repository = service;
     }
 
     @GetMapping("list")
-    public Page<Company> getList(@RequestParam(defaultValue = "0") Long offset,
+    public Page<Employee> getList(@RequestParam(defaultValue = "0") Long offset,
                                 @RequestParam(defaultValue = "20") int pageSize,
                                 @RequestParam(required = false) String name,
                                 @RequestParam(defaultValue = "true") boolean startsWith) {
@@ -27,8 +27,8 @@ public class CompanyController {
     }
 
     @GetMapping("tree")
-    public List<Company> getTreePart(@RequestParam(required = false) Long parentId) {
-        return parentId == null ? repository.findParents() : repository.findDaughters(parentId);
+    public List<Employee> getTreePart(@RequestParam(required = false) Long parentId) {
+        return parentId == null ? repository.findHigherBosses() : repository.findSubordinates(parentId);
     }
 
     @GetMapping("count")
@@ -36,10 +36,4 @@ public class CompanyController {
                         @RequestParam(defaultValue = "true") boolean startsWith) {
         return name == null ? repository.findCount() : repository.findCount(name, startsWith);
     }
-
-//    @PostMapping
-//    public void add(@RequestBody Company company) {
-//        System.out.print(company.getId());
-//    }
-
 }

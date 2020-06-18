@@ -52,7 +52,15 @@ public class CompanyRepository {
         return selectAndJoin().where(filter).groupBy(COMPANY.ID, HEAD.ID);
     }
 
-    private Page<Company> getPage (SelectLimitStep<?> prevStep, Pageable request) {
+    private Result<?> extractForPage (SelectOrderByStep<?> prevStep, long skip, int pageSize) {
+        return prevStep
+                .orderBy(COMPANY.ID)
+                .limit(pageSize)
+                .offset(skip)
+                .fetch();
+    }
+
+    private Page<Company> getPage (SelectOrderByStep<?> prevStep, Pageable request) {
         Result<?> result = extractForPage(
                 prevStep,
                 request.getOffset(),
@@ -71,13 +79,6 @@ public class CompanyRepository {
                 !isNotLast,
                 result.isEmpty()
         );
-    }
-
-    private Result<?> extractForPage (SelectLimitStep<?> prevStep, long skip, int pageSize) {
-        return prevStep
-                .limit(pageSize)
-                .offset(skip)
-                .fetch();
     }
 
     // TODO: вынести это в класс CompanyMapper

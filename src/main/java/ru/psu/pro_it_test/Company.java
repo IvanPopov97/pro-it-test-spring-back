@@ -5,20 +5,20 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
-@NoArgsConstructor
+//@NoArgsConstructor
 public class Company {
     @NonNull
     private long id;
     @NonNull
     private String name;
     private Company headCompany;
-    private int employeeCount;
+    private long employeeCount;
 
-    public Company (Long id,
+    public Company (long id,
                     String name,
                     Long headCompanyId,
                     String headCompanyName,
-                    Integer employeeCount) {
+                    long employeeCount) {
         this.id = id;
         this.name = name;
         this.headCompany = headCompanyId == null ? null : new Company(headCompanyId, headCompanyName);

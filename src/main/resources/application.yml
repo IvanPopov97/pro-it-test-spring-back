@@ -1,4 +1,7 @@
 spring:
+  data:
+    rest:
+      base-path: /api
   datasource:
     url: jdbc:postgresql://localhost:5432/companies
     username: ivan
@@ -6,12 +9,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   jooq:
     sql-dialect: postgres
+
 server:
   port: 8080
-
-#logging:
-#  level:
-#    org:
-#      jooq:
-#        tools:
-#          LoggerListener=DEBUG:
