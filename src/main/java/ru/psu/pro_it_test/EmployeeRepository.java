@@ -74,7 +74,7 @@ public class EmployeeRepository {
                 result.isEmpty()
         );
     }
-    
+
     private List<Employee> mapToEmployee(Result<?> result) {
         return result.map(record -> new Employee(
                 EMPLOYEE.ID.get(record),

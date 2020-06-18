@@ -81,7 +81,6 @@ public class CompanyRepository {
         );
     }
 
-    // TODO: вынести это в класс CompanyMapper
     private List<Company> mapToCompany(Result<?> result) {
         return result.map(record -> new Company(
                 COMPANY.ID.get(record),
