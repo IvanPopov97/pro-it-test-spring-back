@@ -11,10 +11,9 @@ import java.util.List;
 import static ru.psu.pro_it_test.tables.Company.COMPANY;
 import static ru.psu.pro_it_test.tables.Employee.EMPLOYEE;
 
-
 @Repository
 @Transactional
-public class CompanyRepository {
+public class CompanyRepository extends JooqRepository<Company> {
 
     private final DSLContext dsl;
 
@@ -26,22 +25,33 @@ public class CompanyRepository {
         this.dsl = dsl;
     }
 
-    private SelectJoinStep<?> select() {
+    protected SelectJoinStep<?> select() {
         return dsl.select(COMPANY.ID, COMPANY.NAME)
                 .from(COMPANY);
     }
 
-    private SelectConditionStep<?> selectAndFilter(Condition filter) {
-        return select().where(filter);
+    protected SelectJoinStep<?> selectCount() {
+        return dsl.selectCount().from(COMPANY);
     }
 
-    private SelectJoinStep<?> selectAndJoin() {
+    protected SelectJoinStep<?> selectAndJoin() {
         return dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, employeeCount)
                 .from(COMPANY)
                 .leftJoin(HEAD)
                 .on(HEAD.ID.eq(COMPANY.HEAD_COMPANY_ID))
                 .leftJoin(EMPLOYEE)
                 .on(EMPLOYEE.COMPANY_ID.eq(COMPANY.ID));
+    }
+
+    @Override
+    protected List<Company> mapToDto(Result<?> result) {
+        return result.map(record -> new Company(
+                COMPANY.ID.get(record),
+                COMPANY.NAME.get(record),
+                HEAD.ID.get(record),
+                HEAD.NAME.get(record),
+                employeeCount.get(record)
+        ));
     }
 
     private SelectHavingStep<?> selectJoinAndGroup() {
@@ -52,81 +62,19 @@ public class CompanyRepository {
         return selectAndJoin().where(filter).groupBy(COMPANY.ID, HEAD.ID);
     }
 
-    private Result<?> extractForPage (SelectOrderByStep<?> prevStep, long skip, int pageSize) {
-        return prevStep
-                .orderBy(COMPANY.ID)
-                .limit(pageSize)
-                .offset(skip)
-                .fetch();
-    }
-
-    private Page<Company> getPage (SelectOrderByStep<?> prevStep, Pageable request) {
-        Result<?> result = extractForPage(
-                prevStep,
-                request.getOffset(),
-                request.getPageSize() + 1 // запрашиваем на 1 больше, чтобы убедиться, что это not last page
-        );
-
-        boolean isFirst = request.getOffset() == 0;
-        boolean isNotLast = result.size() > request.getPageSize();
-
-        if (isNotLast)
-            result.remove(result.size() - 1);
-
-        return new Page<>(
-                mapToCompany(result),
-                isFirst,
-                !isNotLast,
-                result.isEmpty()
-        );
-    }
-
-    private List<Company> mapToCompany(Result<?> result) {
-        return result.map(record -> new Company(
-                COMPANY.ID.get(record),
-                COMPANY.NAME.get(record),
-                HEAD.ID.get(record),
-                HEAD.NAME.get(record),
-                employeeCount.get(record)
-        ));
-    }
-
-    private String getRegexp(String name, boolean startsWith) {
-        return startsWith ? name + "%" : name;
-    }
-
-
-    private Condition getFilterByName(String name, boolean startsWith) {
-        return COMPANY.NAME.likeIgnoreCase(getRegexp(name, startsWith));
+    protected Condition getFilterByName(String name, boolean startsWith) {
+        return COMPANY.NAME.likeIgnoreCase(getRegexpForFilterByName(name, startsWith));
     }
 
     public Page<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
 
         Condition filter = getFilterByName(name, startsWith);
 
-        return getPage(selectJoinFilterAndGroup(filter), pageRequest);
+        return getPage(selectJoinFilterAndGroup(filter), pageRequest, COMPANY.ID);
     }
-
-//    public List<Company> findAll() {
-//        return mapToCompany(select().fetch());
-//    }
 
     public Page<Company> findAll(Pageable pageRequest) {
-        return getPage(selectJoinAndGroup(), pageRequest);
-    }
-
-    private SelectJoinStep<?> selectCount() {
-        return dsl.selectCount().from(COMPANY);
-    }
-
-    public long findCount() {
-        return selectCount().fetchOne(0, long.class);
-    }
-
-    public long findCount(String name, boolean startsWith) {
-        return selectCount()
-                .where(getFilterByName(name, startsWith))
-                .fetchOne(0, long.class);
+        return getPage(selectJoinAndGroup(), pageRequest, COMPANY.ID);
     }
 
     public List<Company> findDaughters(Long parentId) {

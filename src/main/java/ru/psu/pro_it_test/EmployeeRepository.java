@@ -12,7 +12,7 @@ import static ru.psu.pro_it_test.tables.Company.COMPANY;
 
 @Repository
 @Transactional
-public class EmployeeRepository {
+public class EmployeeRepository extends JooqRepository<Employee> {
 
     private final DSLContext dsl;
 
@@ -23,16 +23,16 @@ public class EmployeeRepository {
         this.dsl = dsl;
     }
 
-    private SelectJoinStep<?> select() {
+    protected SelectJoinStep<?> select() {
         return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME)
                 .from(EMPLOYEE);
     }
 
-    private SelectConditionStep<?> selectAndFilter(Condition filter) {
-        return select().where(filter);
+    protected SelectJoinStep<?> selectCount() {
+        return dsl.selectCount().from(EMPLOYEE);
     }
 
-    private SelectJoinStep<?> selectAndJoin() {
+    protected SelectJoinStep<?> selectAndJoin() {
         return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME, COMPANY.ID, COMPANY.NAME, BOSS.ID, BOSS.NAME)
                 .from(EMPLOYEE)
                 .leftJoin(COMPANY)
@@ -41,41 +41,8 @@ public class EmployeeRepository {
                 .on(BOSS.ID.eq(EMPLOYEE.BOSS_ID));
     }
 
-    private SelectHavingStep<?> selectJoinAndFilter(Condition filter) {
-        return selectAndJoin().where(filter);
-    }
-
-    private Result<?> extractForPage (SelectOrderByStep<?> prevStep, long skip, int pageSize) {
-        return prevStep
-                .orderBy(EMPLOYEE.ID)
-                .limit(pageSize)
-                .offset(skip)
-                .fetch();
-    }
-
-    // код getPage и extractForPage дублируется
-    private Page<Employee> getPage (SelectOrderByStep<?> prevStep, Pageable request) {
-        Result<?> result = extractForPage(
-                prevStep,
-                request.getOffset(),
-                request.getPageSize() + 1 // запрашиваем на 1 больше, чтобы убедиться, что это not last page
-        );
-
-        boolean isFirst = request.getOffset() == 0;
-        boolean isNotLast = result.size() > request.getPageSize();
-
-        if (isNotLast)
-            result.remove(result.size() - 1);
-
-        return new Page<>(
-                mapToEmployee(result),
-                isFirst,
-                !isNotLast,
-                result.isEmpty()
-        );
-    }
-
-    private List<Employee> mapToEmployee(Result<?> result) {
+    @Override
+    protected List<Employee> mapToDto(Result<?> result) {
         return result.map(record -> new Employee(
                 EMPLOYEE.ID.get(record),
                 EMPLOYEE.NAME.get(record),
@@ -86,35 +53,21 @@ public class EmployeeRepository {
         ));
     }
 
-    private Condition getFilterByName(String name, boolean startsWith) {
-        String regexp = startsWith ? name + "%" : name;
-        return COMPANY.NAME.likeIgnoreCase(regexp);
+    protected Condition getFilterByName(String name, boolean startsWith) {
+        return COMPANY.NAME.likeIgnoreCase(getRegexpForFilterByName(name, startsWith));
     }
 
     public Page<Employee> findByName(String name, boolean startsWith, Pageable pageRequest) {
 
         Condition filter = getFilterByName(name, startsWith);
 
-        return getPage(selectJoinAndFilter(filter), pageRequest);
+        return getPage(selectJoinAndFilter(filter), pageRequest, COMPANY.ID);
     }
 
     public Page<Employee> findAll(Pageable pageRequest) {
-        return getPage(selectAndJoin(), pageRequest);
+        return getPage(selectAndJoin(), pageRequest, COMPANY.ID);
     }
 
-    private SelectJoinStep<?> selectCount() {
-        return dsl.selectCount().from(EMPLOYEE);
-    }
-
-    public long findCount() {
-        return selectCount().fetchOne(0, long.class);
-    }
-
-    public long findCount(String name, boolean startsWith) {
-        return selectCount()
-                .where(getFilterByName(name, startsWith))
-                .fetchOne(0, long.class);
-    }
 
     public List<Employee> findSubordinates(Long parentId) {
         Condition filter = EMPLOYEE.COMPANY_ID.eq(parentId);

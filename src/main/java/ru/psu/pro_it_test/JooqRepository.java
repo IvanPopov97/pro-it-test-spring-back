@@ -9,13 +9,25 @@ public abstract class JooqRepository<T> {
 
     protected abstract SelectJoinStep<?> selectCount();
 
-    protected abstract SelectConditionStep<?> selectAndFilter(Condition filter);
-
     protected abstract SelectJoinStep<?> selectAndJoin();
 
-    protected abstract SelectHavingStep<?> selectJoinAndFilter(Condition filter);
+    protected abstract List<T> mapToDto(Result<?> result);
 
-    private Result<?> extractForPage(SelectOrderByStep<?> prevStep,
+    protected abstract Condition getFilterByName(String name, boolean startsWith);
+
+    public abstract Page<T> findByName(String name, boolean startsWith, Pageable pageRequest);
+
+    public abstract Page<T> findAll(Pageable pageRequest);
+
+    protected SelectConditionStep<?> selectAndFilter(Condition filter) {
+        return select().where(filter);
+    }
+
+    protected SelectHavingStep<?> selectJoinAndFilter(Condition filter) {
+        return selectAndJoin().where(filter);
+    }
+
+    protected Result<?> extractForPage(SelectOrderByStep<?> prevStep,
                                      Field<?> orderByField,
                                      long skip,
                                      int pageSize) {
@@ -26,9 +38,7 @@ public abstract class JooqRepository<T> {
                 .fetch();
     }
 
-    protected abstract List<T> mapToDto(Result<?> result);
-
-    private Page<T> getPage(SelectOrderByStep<?> prevStep,
+    protected Page<T> getPage(SelectOrderByStep<?> prevStep,
                             Pageable request,
                             Field<?> orderByField) {
         Result<?> result = extractForPage(
@@ -52,15 +62,9 @@ public abstract class JooqRepository<T> {
         );
     }
 
-    private String getRegexpForFilterByName(String name, boolean startsWith) {
+    protected String getRegexpForFilterByName(String name, boolean startsWith) {
         return startsWith ? name + "%" : name;
     }
-
-    protected abstract Condition getFilterByName(String name, boolean startsWith);
-
-    public abstract Page<T> findByName(String name, boolean startsWith, Pageable pageRequest);
-
-    public abstract Page<Employee> findAll(Pageable pageRequest);
 
     public long findCount() {
         return selectCount().fetchOne(0, long.class);
@@ -71,5 +75,4 @@ public abstract class JooqRepository<T> {
                 .where(getFilterByName(name, startsWith))
                 .fetchOne(0, long.class);
     }
-
 }
