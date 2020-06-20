@@ -1,10 +1,13 @@
-package ru.psu.pro_it_test;
+package ru.psu.pro_it_test.repositories;
 
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.psu.pro_it_test.entities.Company;
+import ru.psu.pro_it_test.entities.Page;
+import ru.psu.pro_it_test.entities.Pageable;
 
 import java.util.List;
 
@@ -34,10 +37,8 @@ public class CompanyRepository extends JooqRepository<Company> {
     }
 
     protected SelectJoinStep<?> select() {
-        SelectJoinStep<?> select = dsl.select(COMPANY.ID, COMPANY.NAME, HAS_CHILD)
+        return dsl.select(COMPANY.ID, COMPANY.NAME, HAS_CHILD)
                 .from(COMPANY);
-        System.out.println(select.getSQL());
-        return select;
     }
 
     protected SelectJoinStep<?> selectCount() {
@@ -72,13 +73,9 @@ public class CompanyRepository extends JooqRepository<Company> {
         return selectAndJoin().where(filter).groupBy(COMPANY.ID, HEAD.ID);
     }
 
-    protected Condition getFilterByName(String name, boolean startsWith) {
-        return COMPANY.NAME.likeIgnoreCase(getRegexpForFilterByName(name, startsWith));
-    }
-
     public Page<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
 
-        Condition filter = getFilterByName(name, startsWith);
+        Condition filter = getFilterByName(COMPANY.NAME, name, startsWith);
 
         return getPage(selectJoinFilterAndGroup(filter), pageRequest, COMPANY.ID);
     }
@@ -87,12 +84,17 @@ public class CompanyRepository extends JooqRepository<Company> {
         return getPage(selectJoinAndGroup(), pageRequest, COMPANY.ID);
     }
 
+    public long findCount(String name, boolean startsWith) {
+        Condition filter = getFilterByName(COMPANY.NAME, name, startsWith);
+        return findCount(filter);
+    }
+
     public List<Company> findDaughters(Long parentId) {
         Condition filter = COMPANY.HEAD_COMPANY_ID.eq(parentId);
         return selectAndFilter(filter).fetchInto(Company.class);
     }
 
-    public List<Company> findParents() {
+    public List<Company> findRootCompanies() {
         Condition filter = COMPANY.HEAD_COMPANY_ID.isNull();
         return selectAndFilter(filter).fetchInto(Company.class);
     }

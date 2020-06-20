@@ -1,10 +1,13 @@
-package ru.psu.pro_it_test;
+package ru.psu.pro_it_test.repositories;
 
 import org.jooq.*;
+import ru.psu.pro_it_test.entities.Page;
+import ru.psu.pro_it_test.entities.Pageable;
 
 import java.util.List;
 
 public abstract class JooqRepository<T> {
+
     protected abstract SelectJoinStep<?> select();
 
     protected abstract SelectJoinStep<?> selectCount();
@@ -12,10 +15,6 @@ public abstract class JooqRepository<T> {
     protected abstract SelectJoinStep<?> selectAndJoin();
 
     protected abstract List<T> mapToDto(Result<?> result);
-
-    protected abstract Condition getFilterByName(String name, boolean startsWith);
-
-    public abstract Page<T> findByName(String name, boolean startsWith, Pageable pageRequest);
 
     public abstract Page<T> findAll(Pageable pageRequest);
 
@@ -28,11 +27,11 @@ public abstract class JooqRepository<T> {
     }
 
     protected Result<?> extractForPage(SelectOrderByStep<?> prevStep,
-                                     Field<?> orderByField,
+                                     Field<?> sortField,
                                      long skip,
                                      int pageSize) {
         return prevStep
-                .orderBy(orderByField)
+                .orderBy(sortField)
                 .limit(pageSize)
                 .offset(skip)
                 .fetch();
@@ -40,10 +39,10 @@ public abstract class JooqRepository<T> {
 
     protected Page<T> getPage(SelectOrderByStep<?> prevStep,
                             Pageable request,
-                            Field<?> orderByField) {
+                            Field<?> sortField) {
         Result<?> result = extractForPage(
                 prevStep,
-                orderByField,
+                sortField,
                 request.getOffset(),
                 request.getPageSize() + 1 // запрашиваем на 1 больше, чтобы убедиться, что это not last page
         );
@@ -62,17 +61,18 @@ public abstract class JooqRepository<T> {
         );
     }
 
-    protected String getRegexpForFilterByName(String name, boolean startsWith) {
-        return startsWith ? name + "%" : name;
+    protected Condition getFilterByName(Field<?> field, String name, boolean startsWith) {
+        String regexp = startsWith ? name + "%" : name;
+        return field.likeIgnoreCase(regexp);
+    }
+
+    protected long findCount(Condition filter) {
+        return selectCount()
+                .where(filter)
+                .fetchOne(0, long.class);
     }
 
     public long findCount() {
         return selectCount().fetchOne(0, long.class);
-    }
-
-    public long findCount(String name, boolean startsWith) {
-        return selectCount()
-                .where(getFilterByName(name, startsWith))
-                .fetchOne(0, long.class);
     }
 }

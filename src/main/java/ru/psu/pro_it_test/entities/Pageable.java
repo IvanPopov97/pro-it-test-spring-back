@@ -1,4 +1,4 @@
-package ru.psu.pro_it_test;
+package ru.psu.pro_it_test.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

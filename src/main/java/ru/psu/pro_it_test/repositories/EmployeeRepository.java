@@ -1,10 +1,13 @@
-package ru.psu.pro_it_test;
+package ru.psu.pro_it_test.repositories;
 
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.psu.pro_it_test.entities.Employee;
+import ru.psu.pro_it_test.entities.Page;
+import ru.psu.pro_it_test.entities.Pageable;
 
 import java.util.List;
 
@@ -61,28 +64,55 @@ public class EmployeeRepository extends JooqRepository<Employee> {
         ));
     }
 
-    protected Condition getFilterByName(String name, boolean startsWith) {
-        return COMPANY.NAME.likeIgnoreCase(getRegexpForFilterByName(name, startsWith));
+    private Field<?> getNameField(boolean isEmployeeName) {
+        return isEmployeeName ? EMPLOYEE.NAME : COMPANY.NAME;
     }
 
-    public Page<Employee> findByName(String name, boolean startsWith, Pageable pageRequest) {
+    public Page<Employee> findByName(String name, boolean isEmployeeName, boolean startsWith, Pageable pageRequest) {
 
-        Condition filter = getFilterByName(name, startsWith);
+        Field<?> nameField = getNameField(isEmployeeName);
+        Condition filter = getFilterByName(nameField, name, startsWith);
 
         return getPage(selectJoinAndFilter(filter), pageRequest, COMPANY.ID);
     }
+
+    public Page<Employee> findByName(String name, String companyName, boolean startsWith, Pageable pageRequest) {
+
+        Condition filterByName = getFilterByName(EMPLOYEE.NAME, name, startsWith);
+        Condition filterByCompanyName = getFilterByName(COMPANY.NAME, companyName, startsWith);
+
+        return getPage(
+                selectJoinAndFilter(
+                        filterByName.and(filterByCompanyName)
+                ),
+                pageRequest,
+                COMPANY.ID
+        );
+    }
+
 
     public Page<Employee> findAll(Pageable pageRequest) {
         return getPage(selectAndJoin(), pageRequest, COMPANY.ID);
     }
 
+    public long findCount(String name, boolean isEmployeeName, boolean startsWith) {
+        Field<?> nameField = getNameField(isEmployeeName);
+        Condition filter = getFilterByName(nameField, name, startsWith);
+        return findCount(filter);
+    }
 
-    public List<Employee> findSubordinates(Long parentId) {
-        Condition filter = EMPLOYEE.COMPANY_ID.eq(parentId);
+    public long findCount(String name, String companyName, boolean startsWith) {
+        Condition filterByName = getFilterByName(EMPLOYEE.NAME, name, startsWith);
+        Condition filterByCompanyName = getFilterByName(COMPANY.NAME, companyName, startsWith);
+        return findCount(filterByName.and(filterByCompanyName));
+    }
+
+    public List<Employee> findSubordinates(Long bossId) {
+        Condition filter = EMPLOYEE.COMPANY_ID.eq(bossId);
         return selectAndFilter(filter).fetchInto(Employee.class);
     }
 
-    public List<Employee> findHigherBosses() {
+    public List<Employee> findRootEmployees() {
         Condition filter = EMPLOYEE.BOSS_ID.isNull();
         return selectAndFilter(filter).fetchInto(Employee.class);
     }
