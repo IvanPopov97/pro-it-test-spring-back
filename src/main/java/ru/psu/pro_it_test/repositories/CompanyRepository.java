@@ -31,6 +31,8 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     private final ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
 
+    private final Field<?> sortField = COMPANY.ID;
+
     @Autowired
     public CompanyRepository(DSLContext dsl) {
         this.dsl = dsl;
@@ -77,11 +79,11 @@ public class CompanyRepository extends JooqRepository<Company> {
 
         Condition filter = getFilterByName(COMPANY.NAME, name, startsWith);
 
-        return getPage(selectJoinFilterAndGroup(filter), pageRequest, COMPANY.ID);
+        return getPage(selectJoinFilterAndGroup(filter), pageRequest, sortField);
     }
 
     public Page<Company> findAll(Pageable pageRequest) {
-        return getPage(selectJoinAndGroup(), pageRequest, COMPANY.ID);
+        return getPage(selectJoinAndGroup(), pageRequest, sortField);
     }
 
     public long findCount(String name, boolean startsWith) {

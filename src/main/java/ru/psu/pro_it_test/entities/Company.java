@@ -10,8 +10,8 @@ public class Company {
     private long id;
     @NonNull
     private String name;
-    private Company headCompany;
     private long employeeCount;
+    private Company headCompany;
     private boolean hasChild;
 
     public Company (long id,
@@ -21,8 +21,8 @@ public class Company {
                     long employeeCount) {
         this.id = id;
         this.name = name;
-        this.headCompany = headCompanyId == null ? null : new Company(headCompanyId, headCompanyName);
         this.employeeCount = employeeCount;
+        this.headCompany = headCompanyId == null ? null : new Company(headCompanyId, headCompanyName);
     }
 
     public Company (long id,

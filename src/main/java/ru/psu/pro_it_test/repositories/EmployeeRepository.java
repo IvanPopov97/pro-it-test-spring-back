@@ -29,6 +29,8 @@ public class EmployeeRepository extends JooqRepository<Employee> {
             )
     );
 
+    private final Field<?> sortField = EMPLOYEE.ID;
+
     @Autowired
     public EmployeeRepository(DSLContext dsl) {
         this.dsl = dsl;
@@ -73,7 +75,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
         Field<?> nameField = getNameField(isEmployeeName);
         Condition filter = getFilterByName(nameField, name, startsWith);
 
-        return getPage(selectJoinAndFilter(filter), pageRequest, COMPANY.ID);
+        return getPage(selectJoinAndFilter(filter), pageRequest, sortField);
     }
 
     public Page<Employee> findByName(String name, String companyName, boolean startsWith, Pageable pageRequest) {
@@ -86,13 +88,13 @@ public class EmployeeRepository extends JooqRepository<Employee> {
                         filterByName.and(filterByCompanyName)
                 ),
                 pageRequest,
-                COMPANY.ID
+                sortField
         );
     }
 
 
     public Page<Employee> findAll(Pageable pageRequest) {
-        return getPage(selectAndJoin(), pageRequest, COMPANY.ID);
+        return getPage(selectAndJoin(), pageRequest, sortField);
     }
 
     public long findCount(String name, boolean isEmployeeName, boolean startsWith) {
@@ -108,7 +110,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
     }
 
     public List<Employee> findSubordinates(Long bossId) {
-        Condition filter = EMPLOYEE.COMPANY_ID.eq(bossId);
+        Condition filter = EMPLOYEE.BOSS_ID.eq(bossId);
         return selectAndFilter(filter).fetchInto(Employee.class);
     }
 
