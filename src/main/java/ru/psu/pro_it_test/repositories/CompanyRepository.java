@@ -30,8 +30,7 @@ public class CompanyRepository extends JooqRepository<Company> {
     );
 
     private final ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
-
-    private final Field<?> sortField = COMPANY.ID;
+    private final Field<?> SORT_FIELD = COMPANY.ID;
 
     @Autowired
     public CompanyRepository(DSLContext dsl) {
@@ -40,6 +39,11 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     protected SelectJoinStep<?> select() {
         return dsl.select(COMPANY.ID, COMPANY.NAME, HAS_CHILD)
+                .from(COMPANY);
+    }
+
+    protected SelectJoinStep<?> select(List<Field<?>> fields) {
+        return dsl.select(fields)
                 .from(COMPANY);
     }
 
@@ -79,11 +83,15 @@ public class CompanyRepository extends JooqRepository<Company> {
 
         Condition filter = getFilterByName(COMPANY.NAME, name, startsWith);
 
-        return getPage(selectJoinFilterAndGroup(filter), pageRequest, sortField);
+        return getPage(selectJoinFilterAndGroup(filter), pageRequest, SORT_FIELD);
+    }
+
+    public List<Company> findAllNames() {
+        return select(List.of(COMPANY.ID, COMPANY.NAME)).fetchInto(Company.class);
     }
 
     public Page<Company> findAll(Pageable pageRequest) {
-        return getPage(selectJoinAndGroup(), pageRequest, sortField);
+        return getPage(selectJoinAndGroup(), pageRequest, SORT_FIELD);
     }
 
     public long findCount(String name, boolean startsWith) {
@@ -99,5 +107,14 @@ public class CompanyRepository extends JooqRepository<Company> {
     public List<Company> findRootCompanies() {
         Condition filter = COMPANY.HEAD_COMPANY_ID.isNull();
         return selectAndFilter(filter).fetchInto(Company.class);
+    }
+
+    public long add(Company company) {
+        Long headCompanyID = company.getHeadCompany() == null ? null : company.getHeadCompany().getId();
+        System.out.println(headCompanyID);
+        System.out.println(company.getName());
+        return dsl.insertInto(COMPANY, COMPANY.NAME, COMPANY.HEAD_COMPANY_ID)
+                .values(company.getName(), headCompanyID)
+                .returning().fetchOne().getId();
     }
 }

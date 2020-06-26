@@ -14,6 +14,8 @@ public class Company {
     private Company headCompany;
     private boolean hasChild;
 
+    private Company() {}
+
     public Company (long id,
                     String name,
                     Long headCompanyId,

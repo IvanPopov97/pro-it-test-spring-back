@@ -19,6 +19,11 @@ public class CompanyController {
         this.repository = service;
     }
 
+    @GetMapping("names")
+    public List<Company> getNames() {
+        return repository.findAllNames();
+    }
+
     @GetMapping("list")
     public Page<Company> getList(@RequestParam(defaultValue = "0") Long offset,
                                  @RequestParam(defaultValue = "20") int pageSize,
@@ -40,9 +45,12 @@ public class CompanyController {
         return name == null ? repository.findCount() : repository.findCount(name, startsWith);
     }
 
-//    @PostMapping
-//    public void add(@RequestBody Company company) {
-//        System.out.print(company.getId());
-//    }
+    @PostMapping
+    @ResponseBody
+    // возвращает id добавленной компании
+    public long add(@RequestBody Company company) {
+        //System.out.println(company.toString());
+        return repository.add(company);
+    }
 
 }
