@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.psu.pro_it_test.entities.Company;
 import ru.psu.pro_it_test.entities.Page;
 import ru.psu.pro_it_test.entities.Pageable;
+import ru.psu.pro_it_test.tables.records.CompanyRecord;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ import static ru.psu.pro_it_test.tables.Company.COMPANY;
 import static ru.psu.pro_it_test.tables.Employee.EMPLOYEE;
 
 @Repository
-@Transactional
+//@Transactional
 public class CompanyRepository extends JooqRepository<Company> {
 
     private final DSLContext dsl;
@@ -108,19 +109,38 @@ public class CompanyRepository extends JooqRepository<Company> {
     public List<Company> findRootCompanies() {
         Condition filter = COMPANY.HEAD_COMPANY_ID.isNull();
         SelectConditionStep<?> query = selectAndFilter(filter);
-        //System.out.println(res);
         return query.fetchInto(Company.class);
 
     }
 
+    private Long extractHeadCompanyId(Company company) {
+        return company.getHeadCompany() == null ? null : company.getHeadCompany().getId();
+    }
+
     public long add(Company company) {
-        Long headCompanyID = company.getHeadCompany() == null ? null : company.getHeadCompany().getId();
-        //System.out.println(headCompanyID);
-        //System.out.println(company.getName());
+        Long headCompanyID = extractHeadCompanyId(company);
         return dsl.insertInto(COMPANY, COMPANY.NAME, COMPANY.HEAD_COMPANY_ID)
                 .values(company.getName(), headCompanyID)
                 .returning()
                 .fetchOne()
                 .getId();
     }
+
+    public boolean remove(long id) {
+        Condition filterById = COMPANY.ID.eq(id);
+        return dsl.delete(COMPANY).where(filterById).execute() > 0; //execute возвращает количество удалённых строк
+    }
+
+    public boolean update(Company company) {
+        Condition filterById = COMPANY.ID.eq(company.getId());
+        Long headCompanyId = extractHeadCompanyId(company);
+        return dsl.update(COMPANY)
+                .set(COMPANY.NAME, company.getName())
+                .set(COMPANY.HEAD_COMPANY_ID, headCompanyId)
+                .where(filterById)
+                .execute() > 0;
+    }
+
+
+
 }

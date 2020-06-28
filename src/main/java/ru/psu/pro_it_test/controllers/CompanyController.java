@@ -9,7 +9,7 @@ import ru.psu.pro_it_test.repositories.CompanyRepository;
 
 import java.util.List;
 
-@RestController @RequestMapping("company") @CrossOrigin(origins = "http://localhost:3000")
+@RestController @RequestMapping("api/company") @CrossOrigin(origins = "http://localhost:3000")
 public class CompanyController {
 
     private final CompanyRepository repository;
@@ -53,4 +53,17 @@ public class CompanyController {
         return repository.add(company);
     }
 
+    @PutMapping("{id}")
+    public Company update(@PathVariable long id, @RequestBody Company company) {
+        company.setId(id);
+        //System.out.println(company);
+        repository.update(company);
+        return company;
+    }
+
+    @DeleteMapping("{id}")
+    public void delete(@PathVariable long id) {
+        //System.out.println(id);
+        repository.remove(id);
+    }
 }

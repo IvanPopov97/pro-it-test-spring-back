@@ -16,10 +16,6 @@ public abstract class JooqRepository<T> {
 
     protected abstract SelectJoinStep<?> selectAndJoin();
 
-    protected abstract List<T> mapToDto(Result<?> result);
-
-    public abstract Page<T> findAll(Pageable pageRequest);
-
     protected SelectConditionStep<?> selectAndFilter(Condition filter) {
         return select().where(filter);
     }
@@ -27,6 +23,10 @@ public abstract class JooqRepository<T> {
     protected SelectHavingStep<?> selectJoinAndFilter(Condition filter) {
         return selectAndJoin().where(filter);
     }
+
+    protected abstract List<T> mapToDto(Result<?> result);
+
+    public abstract Page<T> findAll(Pageable pageRequest);
 
     protected Result<?> extractForPage(SelectOrderByStep<?> prevStep,
                                      Field<?> sortField,

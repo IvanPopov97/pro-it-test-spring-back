@@ -5,6 +5,7 @@ import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.psu.pro_it_test.entities.Company;
 import ru.psu.pro_it_test.entities.Employee;
 import ru.psu.pro_it_test.entities.Page;
 import ru.psu.pro_it_test.entities.Pageable;
@@ -15,7 +16,7 @@ import static ru.psu.pro_it_test.tables.Employee.EMPLOYEE;
 import static ru.psu.pro_it_test.tables.Company.COMPANY;
 
 @Repository
-@Transactional
+//@Transactional
 public class EmployeeRepository extends JooqRepository<Employee> {
 
     private final DSLContext dsl;
@@ -131,13 +132,38 @@ public class EmployeeRepository extends JooqRepository<Employee> {
                 .fetchInto(Employee.class);
     }
 
+    private Long extractCompanyId(Employee employee) {
+        return employee.getCompany() == null ? null : employee.getCompany().getId();
+    }
+
+    private Long extractBossId(Employee employee) {
+        return employee.getBoss() == null ? null : employee.getBoss().getId();
+    }
+
     public long add(Employee employee) {
-        Long companyId = employee.getCompany() == null ? null : employee.getCompany().getId();
-        Long bossId = employee.getBoss() == null ? null : employee.getBoss().getId();
+        Long companyId = extractCompanyId(employee);
+        Long bossId = extractBossId(employee);
         return dsl.insertInto(EMPLOYEE, EMPLOYEE.NAME, EMPLOYEE.COMPANY_ID, EMPLOYEE.BOSS_ID)
                 .values(employee.getName(), companyId, bossId)
                 .returning()
                 .fetchOne()
                 .getId();
+    }
+
+    public boolean remove(long id) {
+        Condition filterById = EMPLOYEE.ID.eq(id);
+        return dsl.delete(EMPLOYEE).where(filterById).execute() > 0; //execute возвращает количество удалённых строк
+    }
+
+    public boolean update(Employee employee) {
+        Condition filterById = EMPLOYEE.ID.eq(employee.getId());
+        Long companyId = extractCompanyId(employee);
+        Long bossId = extractBossId(employee);
+        return dsl.update(EMPLOYEE)
+                .set(EMPLOYEE.NAME, employee.getName())
+                .set(EMPLOYEE.COMPANY_ID, companyId)
+                .set(EMPLOYEE.BOSS_ID, bossId)
+                .where(filterById)
+                .execute() > 0;
     }
 }

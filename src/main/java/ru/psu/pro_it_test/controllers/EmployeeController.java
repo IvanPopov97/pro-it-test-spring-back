@@ -2,6 +2,7 @@ package ru.psu.pro_it_test.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+//import ru.psu.pro_it_test.entities.Company;
 import ru.psu.pro_it_test.entities.Employee;
 import ru.psu.pro_it_test.entities.Page;
 import ru.psu.pro_it_test.entities.Pageable;
@@ -9,7 +10,7 @@ import ru.psu.pro_it_test.repositories.EmployeeRepository;
 
 import java.util.List;
 
-@RestController @RequestMapping("employee") @CrossOrigin(origins = "http://localhost:3000")
+@RestController @RequestMapping("api/employee") @CrossOrigin(origins = "http://localhost:3000")
 public class EmployeeController {
 
     private final EmployeeRepository repository;
@@ -64,5 +65,19 @@ public class EmployeeController {
     public long add(@RequestBody Employee employee) {
         System.out.println(employee);
         return repository.add(employee);
+    }
+
+    @PutMapping("{id}")
+    public Employee update(@PathVariable long id, @RequestBody Employee employee) {
+        employee.setId(id);
+        //repository.update(employee);
+        System.out.println(employee);
+        return employee;
+    }
+
+    @DeleteMapping("{id}")
+    public void delete(@PathVariable long id) {
+        System.out.println(id);
+        repository.remove(id);
     }
 }
