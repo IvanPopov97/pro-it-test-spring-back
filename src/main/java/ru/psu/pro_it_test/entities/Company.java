@@ -29,9 +29,9 @@ public class Company {
 
     public Company (long id,
                     String name,
-                    boolean isHeadCompany) {
+                    boolean hasChild) {
         this.id = id;
         this.name = name;
-        this.hasChild = isHeadCompany;
+        this.hasChild = hasChild;
     }
 }

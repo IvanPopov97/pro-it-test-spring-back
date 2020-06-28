@@ -27,7 +27,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
                             DSL.select(EMPLOYEE.BOSS_ID).from(EMPLOYEE)
                     )
             )
-    );
+    ).as("has_child");
 
     private final Field<?> sortField = EMPLOYEE.ID;
 
@@ -39,6 +39,11 @@ public class EmployeeRepository extends JooqRepository<Employee> {
     protected SelectJoinStep<?> select() {
         return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME, HAS_CHILD)
                 .from(EMPLOYEE);
+    }
+
+    @Override
+    protected SelectJoinStep<?> select(List<Field<?>> fields) {
+        return dsl.select(fields).from(EMPLOYEE);
     }
 
     protected SelectJoinStep<?> selectCount() {
@@ -117,5 +122,22 @@ public class EmployeeRepository extends JooqRepository<Employee> {
     public List<Employee> findRootEmployees() {
         Condition filter = EMPLOYEE.BOSS_ID.isNull();
         return selectAndFilter(filter).fetchInto(Employee.class);
+    }
+
+    public List<Employee> findNamesByCompanyId(long id) {
+        Condition filter = EMPLOYEE.COMPANY_ID.eq(id);
+        return select(List.of(EMPLOYEE.ID, EMPLOYEE.NAME))
+                .where(filter)
+                .fetchInto(Employee.class);
+    }
+
+    public long add(Employee employee) {
+        Long companyId = employee.getCompany() == null ? null : employee.getCompany().getId();
+        Long bossId = employee.getBoss() == null ? null : employee.getBoss().getId();
+        return dsl.insertInto(EMPLOYEE, EMPLOYEE.NAME, EMPLOYEE.COMPANY_ID, EMPLOYEE.BOSS_ID)
+                .values(employee.getName(), companyId, bossId)
+                .returning()
+                .fetchOne()
+                .getId();
     }
 }

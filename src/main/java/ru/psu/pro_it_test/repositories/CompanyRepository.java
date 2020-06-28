@@ -27,7 +27,7 @@ public class CompanyRepository extends JooqRepository<Company> {
                             DSL.select(COMPANY.HEAD_COMPANY_ID).from(COMPANY)
                     )
             )
-    );
+    ).as("has_child");
 
     private final ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
     private final Field<?> SORT_FIELD = COMPANY.ID;
@@ -38,6 +38,7 @@ public class CompanyRepository extends JooqRepository<Company> {
     }
 
     protected SelectJoinStep<?> select() {
+        //System.out.println(query.getSQL());
         return dsl.select(COMPANY.ID, COMPANY.NAME, HAS_CHILD)
                 .from(COMPANY);
     }
@@ -106,15 +107,20 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     public List<Company> findRootCompanies() {
         Condition filter = COMPANY.HEAD_COMPANY_ID.isNull();
-        return selectAndFilter(filter).fetchInto(Company.class);
+        SelectConditionStep<?> query = selectAndFilter(filter);
+        //System.out.println(res);
+        return query.fetchInto(Company.class);
+
     }
 
     public long add(Company company) {
         Long headCompanyID = company.getHeadCompany() == null ? null : company.getHeadCompany().getId();
-        System.out.println(headCompanyID);
-        System.out.println(company.getName());
+        //System.out.println(headCompanyID);
+        //System.out.println(company.getName());
         return dsl.insertInto(COMPANY, COMPANY.NAME, COMPANY.HEAD_COMPANY_ID)
                 .values(company.getName(), headCompanyID)
-                .returning().fetchOne().getId();
+                .returning()
+                .fetchOne()
+                .getId();
     }
 }

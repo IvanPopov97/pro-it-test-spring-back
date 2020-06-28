@@ -19,6 +19,11 @@ public class EmployeeController {
         this.repository = service;
     }
 
+    @GetMapping("names")
+    public List<Employee> getNames(long companyId) {
+        return repository.findNamesByCompanyId(companyId);
+    }
+
     @GetMapping("list")
     public Page<Employee> getList(@RequestParam(defaultValue = "0") Long offset,
                                   @RequestParam(defaultValue = "20") int pageSize,
@@ -52,5 +57,12 @@ public class EmployeeController {
                 : companyName == null
                 ? repository.findCount(name, isEmployeeName, startsWith)
                 : repository.findCount(name, companyName, startsWith);
+    }
+
+    @PostMapping
+    @ResponseBody
+    public long add(@RequestBody Employee employee) {
+        System.out.println(employee);
+        return repository.add(employee);
     }
 }

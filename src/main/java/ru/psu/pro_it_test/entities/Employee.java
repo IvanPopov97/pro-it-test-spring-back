@@ -17,6 +17,8 @@ public class Employee {
     private boolean hasChild;
     private Employee boss;
 
+    private Employee() {}
+
     public Employee (Long id,
                      String name,
                      Long companyId,
@@ -31,9 +33,9 @@ public class Employee {
 
     public Employee (long id,
                     String name,
-                    boolean isBoss) {
+                    boolean hasChild) {
         this.id = id;
         this.name = name;
-        this.hasChild = isBoss;
+        this.hasChild = hasChild;
     }
 }

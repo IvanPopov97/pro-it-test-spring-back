@@ -10,6 +10,8 @@ public abstract class JooqRepository<T> {
 
     protected abstract SelectJoinStep<?> select();
 
+    protected abstract SelectJoinStep<?> select(List<Field<?>> fields);
+
     protected abstract SelectJoinStep<?> selectCount();
 
     protected abstract SelectJoinStep<?> selectAndJoin();

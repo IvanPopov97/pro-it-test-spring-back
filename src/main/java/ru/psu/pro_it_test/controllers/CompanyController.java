@@ -36,6 +36,7 @@ public class CompanyController {
 
     @GetMapping("tree")
     public List<Company> getTreePart(@RequestParam(required = false) Long parentId) {
+        //System.out.println(result);
         return parentId == null ? repository.findRootCompanies() : repository.findDaughters(parentId);
     }
 
@@ -47,8 +48,7 @@ public class CompanyController {
 
     @PostMapping
     @ResponseBody
-    // возвращает id добавленной компании
-    public long add(@RequestBody Company company) {
+    public long add(@RequestBody Company company) { // возвращает id добавленной компании
         //System.out.println(company.toString());
         return repository.add(company);
     }
