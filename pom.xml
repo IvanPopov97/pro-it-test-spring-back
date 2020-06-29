@@ -23,6 +23,12 @@
     </properties>
 
     <dependencies>
+
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jooq</artifactId>
@@ -92,12 +98,12 @@
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-                            <excludes>
-                                UNUSED_TABLE                # This table (unqualified name) should not be generated
-                                | PREFIX_.*                   # Objects with a given prefix should not be generated
-                                | SECRET_SCHEMA\.SECRET_TABLE # This table (qualified name) should not be generated
-                                | SECRET_ROUTINE              # This routine (unqualified name) ...
-                            </excludes>
+<!--                            <excludes>-->
+<!--                                UNUSED_TABLE                # This table (unqualified name) should not be generated-->
+<!--                                | PREFIX_.*                   # Objects with a given prefix should not be generated-->
+<!--                                | SECRET_SCHEMA\.SECRET_TABLE # This table (qualified name) should not be generated-->
+<!--                                | SECRET_ROUTINE              # This routine (unqualified name) ...-->
+<!--                            </excludes>-->
                             <inputSchema>public</inputSchema>
                         </database>
                         <target>

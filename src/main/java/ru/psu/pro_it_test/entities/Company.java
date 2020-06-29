@@ -1,10 +1,12 @@
 package ru.psu.pro_it_test.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true) // "неизвестные" свойства присланного объекта игнорятся
 public class Company {
     @NonNull
     private long id;

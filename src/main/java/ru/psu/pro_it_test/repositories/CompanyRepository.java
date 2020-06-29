@@ -4,14 +4,14 @@ import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Transactional;
 import ru.psu.pro_it_test.entities.Company;
 import ru.psu.pro_it_test.entities.Page;
 import ru.psu.pro_it_test.entities.Pageable;
-import ru.psu.pro_it_test.tables.records.CompanyRecord;
+//import ru.psu.pro_it_test.tables.records.CompanyRecord;
 
 import java.util.List;
-
+import static org.jooq.impl.DSL.count;
 import static ru.psu.pro_it_test.tables.Company.COMPANY;
 import static ru.psu.pro_it_test.tables.Employee.EMPLOYEE;
 
@@ -21,7 +21,7 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     private final DSLContext dsl;
 
-    private final AggregateFunction<Integer> EMPLOYEE_COUNT = DSL.count(EMPLOYEE.ID);
+    private final AggregateFunction<Integer> EMPLOYEE_COUNT = count(EMPLOYEE.ID);
     private final Field<Boolean> HAS_CHILD = DSL.field(
             COMPANY.ID.eq(
                     DSL.any(

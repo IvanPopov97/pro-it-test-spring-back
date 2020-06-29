@@ -70,7 +70,7 @@ public class EmployeeController {
     @PutMapping("{id}")
     public Employee update(@PathVariable long id, @RequestBody Employee employee) {
         employee.setId(id);
-        //repository.update(employee);
+        repository.update(employee);
         System.out.println(employee);
         return employee;
     }
