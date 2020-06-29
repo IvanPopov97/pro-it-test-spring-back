@@ -21,13 +21,9 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     private final DSLContext dsl;
 
-    private final AggregateFunction<Integer> EMPLOYEE_COUNT = count(EMPLOYEE.ID);
+    private final Field<Integer> EMPLOYEE_COUNT = count(EMPLOYEE.ID).as("employee_count");
     private final Field<Boolean> HAS_CHILD = DSL.field(
-            COMPANY.ID.eq(
-                    DSL.any(
-                            DSL.select(COMPANY.HEAD_COMPANY_ID).from(COMPANY)
-                    )
-            )
+            COMPANY.ID.eq(DSL.any(DSL.select(COMPANY.HEAD_COMPANY_ID).from(COMPANY)))
     ).as("has_child");
 
     private final ru.psu.pro_it_test.tables.Company HEAD = COMPANY.as("head");
@@ -38,8 +34,7 @@ public class CompanyRepository extends JooqRepository<Company> {
         this.dsl = dsl;
     }
 
-    protected SelectJoinStep<?> select() {
-        //System.out.println(query.getSQL());
+    protected SelectJoinStep<?> selectTreeItems() {
         return dsl.select(COMPANY.ID, COMPANY.NAME, HAS_CHILD)
                 .from(COMPANY);
     }
@@ -53,7 +48,7 @@ public class CompanyRepository extends JooqRepository<Company> {
         return dsl.selectCount().from(COMPANY);
     }
 
-    protected SelectJoinStep<?> selectAndJoin() {
+    protected SelectJoinStep<?> selectListItems() {
         return dsl.select(COMPANY.ID, COMPANY.NAME, HEAD.ID, HEAD.NAME, EMPLOYEE_COUNT)
                 .from(COMPANY)
                 .leftJoin(HEAD)
@@ -74,11 +69,11 @@ public class CompanyRepository extends JooqRepository<Company> {
     }
 
     private SelectHavingStep<?> selectJoinAndGroup() {
-        return selectAndJoin().groupBy(COMPANY.ID, HEAD.ID);
+        return selectListItems().groupBy(COMPANY.ID, HEAD.ID);
     }
 
     private SelectHavingStep<?> selectJoinFilterAndGroup(Condition filter) {
-        return selectAndJoin().where(filter).groupBy(COMPANY.ID, HEAD.ID);
+        return selectListItems().where(filter).groupBy(COMPANY.ID, HEAD.ID);
     }
 
     public Page<Company> findByName(String name, boolean startsWith, Pageable pageRequest) {
@@ -103,12 +98,12 @@ public class CompanyRepository extends JooqRepository<Company> {
 
     public List<Company> findDaughters(Long parentId) {
         Condition filter = COMPANY.HEAD_COMPANY_ID.eq(parentId);
-        return selectAndFilter(filter).fetchInto(Company.class);
+        return selectAndFilterTreeItems(filter).fetchInto(Company.class);
     }
 
     public List<Company> findRootCompanies() {
         Condition filter = COMPANY.HEAD_COMPANY_ID.isNull();
-        SelectConditionStep<?> query = selectAndFilter(filter);
+        SelectConditionStep<?> query = selectAndFilterTreeItems(filter);
         return query.fetchInto(Company.class);
 
     }

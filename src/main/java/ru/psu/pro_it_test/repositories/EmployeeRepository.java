@@ -22,11 +22,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
 
     private final ru.psu.pro_it_test.tables.Employee BOSS = EMPLOYEE.as("boss");
     private final Field<Boolean> HAS_CHILD = DSL.field(
-            EMPLOYEE.ID.eq(
-                    DSL.any(
-                            DSL.select(EMPLOYEE.BOSS_ID).from(EMPLOYEE)
-                    )
-            )
+            EMPLOYEE.ID.eq(DSL.any(DSL.select(EMPLOYEE.BOSS_ID).from(EMPLOYEE)))
     ).as("has_child");
 
     private final Field<?> sortField = EMPLOYEE.ID;
@@ -36,7 +32,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
         this.dsl = dsl;
     }
 
-    protected SelectJoinStep<?> select() {
+    protected SelectJoinStep<?> selectTreeItems() {
         return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME, HAS_CHILD)
                 .from(EMPLOYEE);
     }
@@ -50,7 +46,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
         return dsl.selectCount().from(EMPLOYEE);
     }
 
-    protected SelectJoinStep<?> selectAndJoin() {
+    protected SelectJoinStep<?> selectListItems() {
         return dsl.select(EMPLOYEE.ID, EMPLOYEE.NAME, COMPANY.ID, COMPANY.NAME, BOSS.ID, BOSS.NAME)
                 .from(EMPLOYEE)
                 .leftJoin(COMPANY)
@@ -80,7 +76,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
         Field<?> nameField = getNameField(isEmployeeName);
         Condition filter = getFilterByName(nameField, name, startsWith);
 
-        return getPage(selectJoinAndFilter(filter), pageRequest, sortField);
+        return getPage(selectAndFilterListItems(filter), pageRequest, sortField);
     }
 
     public Page<Employee> findByName(String name, String companyName, boolean startsWith, Pageable pageRequest) {
@@ -89,7 +85,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
         Condition filterByCompanyName = getFilterByName(COMPANY.NAME, companyName, startsWith);
 
         return getPage(
-                selectJoinAndFilter(
+                selectAndFilterListItems(
                         filterByName.and(filterByCompanyName)
                 ),
                 pageRequest,
@@ -99,7 +95,7 @@ public class EmployeeRepository extends JooqRepository<Employee> {
 
 
     public Page<Employee> findAll(Pageable pageRequest) {
-        return getPage(selectAndJoin(), pageRequest, sortField);
+        return getPage(selectListItems(), pageRequest, sortField);
     }
 
     public long findCount(String name, boolean isEmployeeName, boolean startsWith) {
@@ -116,12 +112,12 @@ public class EmployeeRepository extends JooqRepository<Employee> {
 
     public List<Employee> findSubordinates(Long bossId) {
         Condition filter = EMPLOYEE.BOSS_ID.eq(bossId);
-        return selectAndFilter(filter).fetchInto(Employee.class);
+        return selectAndFilterTreeItems(filter).fetchInto(Employee.class);
     }
 
     public List<Employee> findRootEmployees() {
         Condition filter = EMPLOYEE.BOSS_ID.isNull();
-        return selectAndFilter(filter).fetchInto(Employee.class);
+        return selectAndFilterTreeItems(filter).fetchInto(Employee.class);
     }
 
     public List<Employee> findNamesByCompanyId(long id) {

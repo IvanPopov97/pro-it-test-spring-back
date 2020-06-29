@@ -8,20 +8,20 @@ import java.util.List;
 
 public abstract class JooqRepository<T> {
 
-    protected abstract SelectJoinStep<?> select();
+    protected abstract SelectJoinStep<?> selectTreeItems();
 
     protected abstract SelectJoinStep<?> select(List<Field<?>> fields);
 
     protected abstract SelectJoinStep<?> selectCount();
 
-    protected abstract SelectJoinStep<?> selectAndJoin(); // соединяет таблицу с другими по внешним ключам
+    protected abstract SelectJoinStep<?> selectListItems(); // соединяет таблицу с другими по внешним ключам
 
-    protected SelectConditionStep<?> selectAndFilter(Condition filter) {
-        return select().where(filter);
+    protected SelectConditionStep<?> selectAndFilterTreeItems(Condition filter) {
+        return selectTreeItems().where(filter);
     }
 
-    protected SelectHavingStep<?> selectJoinAndFilter(Condition filter) {
-        return selectAndJoin().where(filter);
+    protected SelectHavingStep<?> selectAndFilterListItems(Condition filter) {
+        return selectListItems().where(filter);
     }
 
     protected abstract List<T> mapToDto(Result<?> result);
