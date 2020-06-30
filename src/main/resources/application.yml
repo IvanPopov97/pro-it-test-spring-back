@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/companies
+    url: jdbc:postgresql://localhost:5432/companies?createDatabaseIfNotExist=true
     username: ivan
     password: 31165119221
     driver-class-name: org.postgresql.Driver

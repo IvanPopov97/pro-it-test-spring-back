@@ -6,7 +6,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.3.0.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
     <groupId>ru.psu</groupId>
     <artifactId>pro_it_test</artifactId>
@@ -86,7 +86,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skip>true</skip>
+                    <skip>false</skip>
 
                     <jdbc>
                         <url>${url}</url>
@@ -98,12 +98,6 @@
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-<!--                            <excludes>-->
-<!--                                UNUSED_TABLE                # This table (unqualified name) should not be generated-->
-<!--                                | PREFIX_.*                   # Objects with a given prefix should not be generated-->
-<!--                                | SECRET_SCHEMA\.SECRET_TABLE # This table (qualified name) should not be generated-->
-<!--                                | SECRET_ROUTINE              # This routine (unqualified name) ...-->
-<!--                            </excludes>-->
                             <inputSchema>public</inputSchema>
                         </database>
                         <target>

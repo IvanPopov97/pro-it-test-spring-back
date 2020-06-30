@@ -14,7 +14,7 @@ public abstract class JooqRepository<T> {
 
     protected abstract SelectJoinStep<?> selectCount();
 
-    protected abstract SelectJoinStep<?> selectListItems(); // соединяет таблицу с другими по внешним ключам
+    protected abstract SelectJoinStep<?> selectListItems();
 
     protected SelectConditionStep<?> selectAndFilterTreeItems(Condition filter) {
         return selectTreeItems().where(filter);

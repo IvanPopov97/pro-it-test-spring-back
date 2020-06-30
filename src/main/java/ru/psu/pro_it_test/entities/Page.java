@@ -14,8 +14,8 @@ public class Page<T> {
     private boolean last; // если сделать limit + 1, то будет на 1 запись больше?
     private boolean empty; // content size > 0 ?
 
-    //private int number; // как узнать?
-    //private int totalElements; // запрос к БД
-    //private int totalPages; // вычисляется так: totalElements / pageSize
+    //private int number;
+    //private int totalElements; // определяется запросом к БД
+    //private int totalPages; // вычисляется как totalElements / pageSize
     //private int numberOfElements;
 }
