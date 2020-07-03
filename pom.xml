@@ -12,28 +12,29 @@
     <artifactId>pro_it_test</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>pro_it_test</name>
-    <description>Demo project for Spring Boot</description>
+    <description>App</description>
+
+    <profiles>
+        <profile>
+            <id>ivan</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <url>jdbc:postgresql://localhost:5432/companies</url>
+                <schema>public</schema>
+                <user>ivan</user>
+                <password>31165119221</password>
+            </properties>
+        </profile>
+    </profiles>
 
     <properties>
         <java.version>1.8</java.version>
         <driver>org.postgresql.Driver</driver>
-        <url>jdbc:postgresql://localhost:5432/companies</url>
-        <user>ivan</user>
-        <password>31165119221</password>
     </properties>
 
     <dependencies>
-
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-actuator</artifactId>-->
-<!--        </dependency>-->
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jooq</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -50,6 +51,12 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jooq</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -66,7 +73,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.liquibase</groupId>-->
+<!--            <artifactId>liquibase-maven-plugin</artifactId>-->
+<!--        </dependency>-->
     </dependencies>
+
+
 
     <build>
         <plugins>
@@ -74,6 +87,29 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>3.10.0</version>
+                <configuration>
+                    <defaultSchemaName>${schema}</defaultSchemaName>
+                    <changeLogFile>/src/main/resources/db/master.xml</changeLogFile>
+                    <url>${url}</url>
+                    <username>${user}</username>
+                    <password>${password}</password>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>updateSQL</goal>
+                            <goal>update</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.jooq</groupId>
                 <artifactId>jooq-codegen-maven</artifactId>
@@ -87,18 +123,20 @@
                 </executions>
                 <configuration>
                     <skip>false</skip>
-
                     <jdbc>
                         <url>${url}</url>
                         <user>${user}</user>
                         <password>${password}</password>
                     </jdbc>
-
                     <generator>
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-                            <inputSchema>public</inputSchema>
+                            <excludes>
+                                databasechangelog
+                                | databasechangeloglock
+                            </excludes>
+                            <inputSchema>${schema}</inputSchema>
                         </database>
                         <target>
                             <packageName>ru.psu.pro_it_test</packageName>

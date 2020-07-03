@@ -1,4 +1,4 @@
-create table companies
+create table company
 (
 	id bigserial
 		constraint company_pk
@@ -7,10 +7,10 @@ create table companies
 	head_company_id bigint
 );
 
-create unique index company_name_uindex
-	on company (name);
+-- create unique index company_name_uindex
+-- 	on company (name);
 
-create table employees
+create table employee
 (
 	id bigserial
 		constraint employee_pk

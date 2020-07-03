@@ -1,69 +1,70 @@
 package ru.psu.pro_it_test.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.psu.pro_it_test.entities.Company;
-import ru.psu.pro_it_test.entities.Page;
-import ru.psu.pro_it_test.entities.Pageable;
-import ru.psu.pro_it_test.repositories.CompanyRepository;
+//import org.springframework.web.server.ResponseStatusException;
+import ru.psu.pro_it_test.dto.CompanyDto;
+import ru.psu.pro_it_test.dto.Page;
+import ru.psu.pro_it_test.dto.Pageable;
+//import ru.psu.pro_it_test.exceptions.CannotBeDeletedException;
+import ru.psu.pro_it_test.services.CompanyService;
 
 import java.util.List;
 
 @RestController @RequestMapping("api/company") @CrossOrigin(origins = "http://localhost:3000")
 public class CompanyController {
 
-    private final CompanyRepository repository;
+    private final CompanyService service;
 
     @Autowired
-    public CompanyController(CompanyRepository service) {
-        this.repository = service;
+    public CompanyController(CompanyService service) {
+        this.service = service;
     }
 
+
+
     @GetMapping("names")
-    public List<Company> getNames() {
-        return repository.findAllNames();
+    public List<CompanyDto> getNames() {
+        return service.findAllNames();
     }
 
     @GetMapping("list")
-    public Page<Company> getList(@RequestParam(defaultValue = "0") Long offset,
-                                 @RequestParam(defaultValue = "20") int pageSize,
-                                 @RequestParam(required = false) String name,
-                                 @RequestParam(defaultValue = "true") boolean startsWith) {
+    public Page<CompanyDto> getList(@RequestParam(defaultValue = "0") Long offset,
+                                    @RequestParam(defaultValue = "20") int pageSize,
+                                    @RequestParam(required = false) String name,
+                                    @RequestParam(defaultValue = "true") boolean startsWith) {
 
         Pageable request = new Pageable(offset, pageSize);
-        return name == null ? repository.findAll(request) : repository.findByName(name, startsWith, request);
+        return name == null ? service.findAll(request) : service.findByName(name, startsWith, request);
     }
 
     @GetMapping("tree")
-    public List<Company> getTreePart(@RequestParam(required = false) Long parentId) {
-        //System.out.println(result);
-        return parentId == null ? repository.findRootCompanies() : repository.findDaughters(parentId);
+    public List<CompanyDto> getTreePart(@RequestParam(required = false) Long parentId) {
+        return parentId == null ? service.findRootItems() : service.findChildItems(parentId);
     }
 
     @GetMapping("count")
     public long getCount(@RequestParam(required = false) String name,
                         @RequestParam(defaultValue = "true") boolean startsWith) {
-        return name == null ? repository.findCount() : repository.findCount(name, startsWith);
+        return name == null ? service.findCount() : service.findCount(name, startsWith);
     }
 
     @PostMapping
     @ResponseBody
-    public long add(@RequestBody Company company) { // возвращает id добавленной компании
-        //System.out.println(company.toString());
-        return repository.add(company);
+    public long add(@RequestBody CompanyDto company) { // возвращает id добавленной компании
+        return service.add(company).getId();
     }
 
     @PutMapping("{id}")
-    public Company update(@PathVariable long id, @RequestBody Company company) {
+    public CompanyDto update(@PathVariable long id, @RequestBody CompanyDto company) {
         company.setId(id);
-        //System.out.println(company);
-        repository.update(company);
+        service.update(company);
         return company;
     }
 
     @DeleteMapping("{id}")
     public void delete(@PathVariable long id) {
-        //System.out.println(id);
-        repository.remove(id);
+        service.remove(id);
     }
 }

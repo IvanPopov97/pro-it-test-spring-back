@@ -1,14 +1,16 @@
-package ru.psu.pro_it_test.entities;
+package ru.psu.pro_it_test.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class Pageable {
     private long offset;
     private int pageSize;
+
+    private Pageable() {}
+
     //private int pageNumber;
 }
